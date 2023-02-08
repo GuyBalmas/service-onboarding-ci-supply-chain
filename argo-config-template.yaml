@@ -76,7 +76,7 @@ spec:
         #@yaml/text-templated-strings
         helm: 
           values: |
-            {{ toYaml .Values.spec.apps.(@= format_values_name() @).path | nindent 8 }}   
+            {{ toYaml .Values.spec.apps.(@= format_values_name() @) | nindent 8 }}   
       syncPolicy:
         automated:
           prune: true
