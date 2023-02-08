@@ -26,6 +26,11 @@ spec:
     #@   return labels
     #@ end
 
+    #@ def format_values_name():
+    #@   tmp = data.values.workload.metadata.name
+    #@   return tmp.replace("-","_")
+    #@ end
+
     #! this function templates out the helm release manifest using supplied data values
     #! as well as the functions defined above.
     #@ def argo_app():
@@ -43,7 +48,7 @@ spec:
         - namespace: #@ data.values.workload.metadata.namespace
           server: https://kubernetes.default.svc
       #@yaml/text-templated-strings
-      sourceRepos: #@ ["{{{{ .Values.spec.apps.{}.repoURL }}}}".format(data.values.workload.metadata.name)]
+      sourceRepos: #@ ["{{{{ .Values.spec.apps.{}.repoURL }}}}".format(format_values_name())]
     ---
     apiVersion: argoproj.io/v1alpha1
     kind: Application
@@ -51,7 +56,7 @@ spec:
       name: #@ data.values.workload.metadata.name
       namespace: #@ data.values.workload.metadata.namespace
       #@yaml/text-templated-strings
-      labels: |                                                               #! CHANGED
+      labels: |                                                               
         {{- toYaml .Values.labels | nindent 4 }}
       finalizers:
         - resources-finalizer.argocd.argoproj.io
@@ -63,15 +68,15 @@ spec:
         server: '{{ .Values.spec.destination.server }}'
       source:
         #@yaml/text-templated-strings
-        repoURL: '{{ .Values.spec.apps.(@= data.values.workload.metadata.name @).repoURL }}'
+        repoURL: '{{ .Values.spec.apps.(@= format_values_name() @).repoURL }}'
         #@yaml/text-templated-strings
-        targetRevision: '{{ .Values.spec.apps.(@= data.values.workload.metadata.name @).targetRevision }}'
+        targetRevision: '{{ .Values.spec.apps.(@= format_values_name() @).targetRevision }}'
         #@yaml/text-templated-strings
-        path: '{{ .Values.spec.apps.(@= data.values.workload.metadata.name @).path }}'
+        path: '{{ .Values.spec.apps.(@= format_values_name() @).path }}'
         #@yaml/text-templated-strings
         helm: 
           values: |
-            {{ toYaml .Values.spec.apps.(@= data.values.workload.metadata.name @).path | nindent 8 }}   #! CHANGED
+            {{ toYaml .Values.spec.apps.(@= format_values_name() @).path | nindent 8 }}   
       syncPolicy:
         automated:
           prune: true
