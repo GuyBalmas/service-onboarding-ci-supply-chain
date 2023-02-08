@@ -1,0 +1,122 @@
+apiVersion: carto.run/v1alpha1
+kind: ClusterSupplyChain
+metadata:
+  name: source-to-gitops-service-onboarding-ci
+spec:
+  params: 
+    - name: maven_repository_url
+      value: https://repo.maven.apache.org/maven2
+    - default: main
+      name: gitops_branch
+    - default: supplychain
+      name: gitops_user_name
+    - default: supplychain
+      name: gitops_user_email
+    - default: supplychain@cluster.local
+      name: gitops_commit_message
+    - default: ""
+      name: gitops_ssh_secret
+
+  resources:
+
+  - name: source-provider
+    params:
+    - default: default
+      name: serviceAccount
+    - name: gitImplementation
+      value: go-git
+    templateRef:
+      kind: ClusterSourceTemplate
+      name: source-template
+
+  - name: image-provider
+    params:
+    - name: registry
+      value:
+        ca_cert_data: "" # LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURIekNDQWdlZ0F3SUJBZ0lSQU83NUxRcE1YVVVLVmZzbjdNdldOQnd3RFFZSktvWklodmNOQVFFTEJRQXcKS1RFbk1DVUdBMVVFQXhNZWRHRndMV2x1WjNKbGMzTXRjMlZzWm5OcFoyNWxaQzF5YjI5MExXTmhNQjRYRFRJegpNREV4TmpBNU1qQXhNRm9YRFRJek1EUXhOakE1TWpBeE1Gb3dLVEVuTUNVR0ExVUVBeE1lZEdGd0xXbHVaM0psCmMzTXRjMlZzWm5OcFoyNWxaQzF5YjI5MExXTmhNSUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DQVE4QU1JSUIKQ2dLQ0FRRUF0WGFuR1ZUZTBLTHM4NUdYSlI4VHl0aTZVTE1MYkw4K21DT0pPRmF3OWFnSklvS2tCK0E5OUtLQwpWMVd2L1BiMnJ1b1VtYVNLZGdPZ0hCZThoYW44Zytwdml6TWdXN3RKZ3lQWnpJRlJvTVNlbkRHYS9neWxBNjJsCjdvNzEzcVpsL0o2cGRiUGFlaTJIZTJRdnJuRDZueGxIVWVNQURMZVVWMGtuanFzUUFqaFh4bXhQTUl6VGdCN2MKSVBGQytIckdBbVZRUU0vY0FHK1JjazBDTnNOUVkwaklIMVJlQ1dzcGo4a2ViSWk1a0VMMTJGa1RxL3ArM2V5eApDT3dhMklCcWRxVGZjdXhqalFyb1o0WmVpU1VONmpWYSt6angwcEhocGRxZkpaa05XY1VWNFVKdjBiV0haMlJFCkVOMlUrT0FYMWxpcWVXNEMvSXZUMGVXcEZkQjArUUlEQVFBQm8wSXdRREFPQmdOVkhROEJBZjhFQkFNQ0FxUXcKRHdZRFZSMFRBUUgvQkFVd0F3RUIvekFkQmdOVkhRNEVGZ1FVWEdzU2d3Rk5vZThZQkVBZXErVlpzV2xXWXR3dwpEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBS1RsRnhDTklERkg5Q0YyWFJENVBwTFRaRUJvVlNYc3dhUDQvZnpZClBFTHJKUWJEQWpTamplcjZwaFJNaHNFaGQ0aktNS1pWZW4wNlorSCt0dHVob05EMlBRNlNlVmRPSEE4M0ZJRmsKdFBrZUttOG5mYW84Z21QUVVQbmlBa1hyOXZzMTEzdnhnRlA0SjdjeVV5Y0ZnYzN5SDl0QXVJek05cGdtZEhNMwpiTjRhRk5MYjRzWUwyOHIyd2I0cEZNeGxsZEZ1T05BTDZBbStXY2RUNjNBSy80M3NydHBxL3owR2N2MlNreHI4ClM2cVVxeU5NUzhTVE9hRlFmWHJrcDAwcUR1M1ZIMTNKWXdodTdrdW81RnNZSGZ0YzJUOS80a0R0KzV0YUZlY3UKMUxHQmpOQjRVM0NjbTl5VlhnL0VoY2g5bmRRTUgvemFzaEJpTHdyTXZyOE41T1E9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+        repository: guybalmas # /tap-supply-chain
+        server: docker.io # 384617649113.dkr.ecr.eu-north-1.amazonaws.com # index.docker.io # 
+    - name: dockerfile
+      default: ./Dockerfile
+    - name: docker_build_context
+      default: ./
+    - name: docker_build_extra_args
+      default: []
+    sources:
+    - name: source
+      resource: source-provider
+    templateRef:
+      kind: ClusterImageTemplate
+      name: kaniko-template
+      
+      # kind: ClusterImageTemplate
+      # options:
+      # - name: kpack-template
+      #   selector:
+      #     matchFields:
+      #     - key: spec.params[?(@.name=="dockerfile")]
+      #       operator: DoesNotExist
+      # - name: kaniko-template
+      #   selector:
+      #     matchFields:
+      #     - key: spec.params[?(@.name=="dockerfile")]
+      #       operator: Exists
+
+  - name: argo-config-provider
+    templateRef:
+      kind: ClusterConfigTemplate
+      name: argo-config-template
+    params:
+      - name: serviceAccount
+        value: default
+    images:
+    - resource: image-provider
+      name: image
+
+  - name: argo-config-writer
+    templateRef:
+      kind: ClusterTemplate
+      name: argo-config-writer-template
+    params:
+      - default: default
+        name: serviceAccount
+      - name: gitops_subpath
+        value: multi-repo/argo-app-of-apps/dev/templates
+      - name: gitops_repository
+        value: https://github.com/GuyBalmas/aws-gitops-config.git
+      - name: gitops_branch
+        value: main
+      - name: gitops_user_name
+        value: service-onboarding-supply-chain # GuyBalmas # service-onboarding-supply-chain
+      - name: gitops_user_email
+        value: service.onboarding@supply.chain #guy.balmas@gmail.com # service.onboarding@supply.chain
+      - name: gitops_commit_message
+        value: update # pushed argo config
+      # - name: registry
+      #   value:
+      #     ca_cert_data: ""
+      #     repository: aws-gitops-config/multi-repo/argo-app-of-apps/dev/templates/
+      #     server: github.com
+    configs:
+      - resource: argo-config-provider
+        name: config
+
+  # - configs:
+  #   - name: config-writer
+  #     params:
+  #     - default: default
+  #       name: serviceAccount
+  #     - name: registry
+  #       value:
+  #         ca_cert_data: ""
+  #         repository: guybalmas
+  #         server: docker.io
+  #     templateRef:
+  #       kind: ClusterTemplate
+  #       name: argo-config-writer-template
+
+  selectorMatchExpressions:
+  - key: apps.tanzu.vmware.com/workload-type
+    operator: In
+    values:
+    - source-to-gitops-service-onboarding-ci  

@@ -1,0 +1,91 @@
+apiVersion: carto.run/v1alpha1
+kind: ClusterConfigTemplate
+metadata:
+  labels:
+    app.tanzu.vmware.com/deliverable-type: argo
+  name: argo-config-template
+spec:
+  configPath: .data
+  healthRule:
+    alwaysHealthy: {}
+  ytt: |
+    #! load the needed ytt libraries for our functions
+    #@ load("@ytt:data", "data")
+    #@ load("@ytt:yaml", "yaml")
+    #@ load("@ytt:overlay", "overlay")
+    #@ load("@ytt:regexp", "regexp")
+
+    #! add all workload labels to the fixed values in this 
+    #! template as well for the stamped out configmap
+    #@ def merge_labels(fixed_values):
+    #@   labels = {}
+    #@   if hasattr(data.values.workload.metadata, "labels"):
+    #@     labels.update(data.values.workload.metadata.labels)
+    #@   end
+    #@   labels.update(fixed_values)
+    #@   return labels
+    #@ end
+
+    #! this function templates out the helm release manifest using supplied data values
+    #! as well as the functions defined above.
+    #@ def argo_app():
+    ---
+    apiVersion: argoproj.io/v1alpha1
+    kind: AppProject
+    metadata:
+      name: #@ data.values.workload.metadata.name
+      namespace: #@ data.values.workload.metadata.namespace
+      #! Finalizer that ensures that project is not deleted until it is not referenced by any application
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      destinations:
+        - namespace: #@ data.values.workload.metadata.namespace
+          server: https://kubernetes.default.svc
+      #@yaml/text-templated-strings
+      sourceRepos: #@ ["{{{{ .Values.spec.apps.{}.repoURL }}}}".format(data.values.workload.metadata.name)]
+    ---
+    apiVersion: argoproj.io/v1alpha1
+    kind: Application
+    metadata:
+      name: #@ data.values.workload.metadata.name
+      namespace: #@ data.values.workload.metadata.namespace
+      #@yaml/text-templated-strings
+      labels: |                                                               #! CHANGED
+        {{- toYaml .Values.labels | nindent 4 }}
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: #@ data.values.workload.metadata.name
+      destination:
+        namespace: #@ data.values.workload.metadata.namespace
+        #@yaml/text-templated-strings
+        server: '{{ .Values.spec.destination.server }}'
+      source:
+        #@yaml/text-templated-strings
+        repoURL: '{{ .Values.spec.apps.(@= data.values.workload.metadata.name @).repoURL }}'
+        #@yaml/text-templated-strings
+        targetRevision: '{{ .Values.spec.apps.(@= data.values.workload.metadata.name @).targetRevision }}'
+        #@yaml/text-templated-strings
+        path: '{{ .Values.spec.apps.(@= data.values.workload.metadata.name @).path }}'
+        #@yaml/text-templated-strings
+        helm: 
+          values: |
+            {{ toYaml .Values.spec.apps.(@= data.values.workload.metadata.name @).path | nindent 8 }}   #! CHANGED
+      syncPolicy:
+        automated:
+          prune: true
+        syncOptions:
+          - CreateNamespace=false #! Created with IaC - https://github.com/argoproj/argo-cd/issues/7799
+        #@ end
+    ---
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: #@ "{}-argo-app".format(data.values.workload.metadata.name)
+      labels: #@ merge_labels({ "app.kubernetes.io/component": "config" })
+    #@yaml/text-templated-strings
+    data: 
+      (@= data.values.workload.metadata.name @)-manifest.yaml: "(@= yaml.encode(argo_app()) @)"
+
+
