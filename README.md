@@ -89,6 +89,21 @@ Tokens:              default-token-82fs2
 Events:              <none>
 ```
 
+
+
+
+
+```bash
+kubectl apply -f argo-config-template.yaml -f argo-config-writer.yaml -f app-values-config-template.yaml -f service-onboarding-ci-supply-chain.yaml
+```
+
+
+
+
+
+
+
+
 # Debug
 ```bash
 k apply -f service-onboarding-ci-supply-chain.yaml
@@ -107,6 +122,5 @@ kubectl -n apps logs ecsdemo-frontend-build-k5btv-pod -c step-build-and-push
 kubectl apply -f argo-config-template.yaml
 
 k get clusterconfigtemplate.carto.run/argo-config-template
-
 
 ```

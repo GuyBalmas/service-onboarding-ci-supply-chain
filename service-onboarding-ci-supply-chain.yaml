@@ -61,6 +61,33 @@ spec:
       #     matchFields:
       #     - key: spec.params[?(@.name=="dockerfile")]
       #       operator: Exists
+  - name: image-scanner 
+    params:
+    - name: scanning_image_policy
+      default: scan-policy
+    - name: scanning_image_template
+      default: private-image-scan-template 
+    templateRef:
+      kind: ClusterImageTemplate
+      name: image-scanner-template
+    images:
+      - name: image
+        resource: image-provider
+
+  # App config: inject digest + image repository
+  - name: app-values-config
+    templateRef:
+      kind: ClusterConfigTemplate
+      name: app-values-config-template
+    params:
+      - name: serviceAccount
+        value: default
+    images:
+      - name: image
+        resource: image-scanner
+    sources:
+    - name: source
+      resource: source-provider
 
   - name: argo-config-provider
     templateRef:
@@ -70,8 +97,8 @@ spec:
       - name: serviceAccount
         value: default
     images:
-    - resource: image-provider
-      name: image
+      - name: image
+        resource: image-scanner
 
   - name: argo-config-writer
     templateRef:
