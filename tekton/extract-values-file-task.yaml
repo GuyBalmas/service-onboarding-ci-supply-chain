@@ -11,7 +11,7 @@ spec:
   workspaces:
     - name: shared-data
   results:
-    - name: source_path
+    - name: values_file
 
   steps:
     - image: ubuntu # docker.io/guybalmas/ubuntu-utils:1.0.0@sha256:8a47b0857f3ba3fb1f65d42c918ed7a937bb1e1857b60f2f79d22ca0299a2fa9 # contains curl
@@ -38,8 +38,6 @@ spec:
         cd example-app
         ls
         echo "Source files full path: $PWD"
-        echo -n "Exporting 'source_path' result: "
-        echo -n source-code/example-app | tee $(results.source_path.path)
     
     - image: ubuntu # contains bash
       name: export-values-file
@@ -48,11 +46,7 @@ spec:
         #!/usr/bin/env bash
         echo ">>> Exporting values.yaml"
         cd $(workspaces.shared-data.path)/source-code
-        
-        mkdir example-app
-        tar -xvzf app.tar.gz -C example-app/
-        cd example-app
-        ls
-        echo "Source files full path: $PWD"
-        echo -n "Exporting 'source_path' result: "
-        echo -n source-code/example-app | tee $(results.source_path.path)
+        values_content=$(cat $(params.VALUES_PATH))
+        echo "values.yaml file: $(values_content)"
+        echo -n "Exporting 'values_file' result: "
+        echo -n $(values_content) | tee $(results.values_file.path)

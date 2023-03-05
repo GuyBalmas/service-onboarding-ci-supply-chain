@@ -46,48 +46,73 @@ spec:
     - name: source
       resource: source-provider
     templateRef:
-      kind: ClusterImageTemplate
-      name: kaniko-template
-      
       # kind: ClusterImageTemplate
-      # options:
-      # - name: kpack-template
-      #   selector:
-      #     matchFields:
-      #     - key: spec.params[?(@.name=="dockerfile")]
-      #       operator: DoesNotExist
-      # - name: kaniko-template
-      #   selector:
-      #     matchFields:
-      #     - key: spec.params[?(@.name=="dockerfile")]
-      #       operator: Exists
-  - name: image-scanner 
-    params:
-    - name: scanning_image_policy
-      default: scan-policy
-    - name: scanning_image_template
-      default: private-image-scan-template 
-    templateRef:
+      # name: kaniko-template    
       kind: ClusterImageTemplate
-      name: image-scanner-template
-    images:
-      - name: image
-        resource: image-provider
+      options:
+      - name: kpack-template
+        selector:
+          matchFields:
+          - key: spec.params[?(@.name=="dockerfile")]
+            operator: DoesNotExist
+      - name: kaniko-template
+        selector:
+          matchFields:
+          - key: spec.params[?(@.name=="dockerfile")]
+            operator: Exists
 
-  # App config: inject digest + image repository
-  - name: app-values-config
-    templateRef:
-      kind: ClusterConfigTemplate
-      name: app-values-config-template
-    params:
-      - name: serviceAccount
-        value: default
-    images:
-      - name: image
-        resource: image-scanner
-    sources:
-    - name: source
-      resource: source-provider
+  # - name: values-provider
+  #   params: []
+  #   sources:
+  #   - name: source
+  #     resource: source-provider
+  #   templateRef:
+  #   #   kind: ClusterImageTemplate
+  #   #   name: extract-values-template
+  #     kind: ClusterImageTemplate
+  #     options:
+  #     - name: kpack-template
+  #       selector:
+  #         matchFields:
+  #         - key: spec.params[?(@.name=="dockerfile")]
+  #           operator: DoesNotExist
+  #     - name: kaniko-template
+  #       selector:
+  #         matchFields:
+  #         - key: spec.params[?(@.name=="dockerfile")]
+  #           operator: Exists
+  
+  # - name: image-scanner               # TODO: REMOVE
+  #   params:
+  #   - name: scanning_image_policy
+  #     default: scan-policy
+  #   - name: scanning_image_template
+  #     default: private-image-scan-template 
+  #   templateRef:
+  #     kind: ClusterImageTemplate
+  #     name: image-scanner-template
+  #   images:
+  #     - name: image
+  #       resource: image-provider
+
+  # TODO: Add Tekton config phase, unpacking tar file, and outputting values.yaml as a config map to be chained to the app-values-config phase.
+
+  # TODO: App config: inject digest + image repository
+  # - name: app-values-config
+  #   templateRef:
+  #     kind: ClusterConfigTemplate
+  #     name: app-values-config-template
+  #   params:
+  #     - name: serviceAccount
+  #       value: default
+  #   images:
+  #     - name: image
+  #       resource: image-scanner
+  #   sources:
+  #   - name: source
+  #     resource: source-provider
+
+  # TODO: add config-writer phase to push back values.yaml
 
   - name: argo-config-provider
     templateRef:
@@ -98,7 +123,10 @@ spec:
         value: default
     images:
       - name: image
-        resource: image-scanner
+        resource: image-provider
+    sources:
+    - name: source
+      resource: source-provider
 
   - name: argo-config-writer
     templateRef:

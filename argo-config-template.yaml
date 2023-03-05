@@ -26,9 +26,21 @@ spec:
     #@   return labels
     #@ end
 
+    #@ def kebabToCamelCase(name):
+    #@   name_parts = name.split("-")
+    #@   v = ""
+    #@   for p in name_parts:
+    #@     if v != "":
+    #@       v = v + p.capitalize()
+    #@     else:
+    #@       v = p
+    #@     end
+    #@   end
+    #@   return v
+    #@ end
+
     #@ def format_values_name():
-    #@   tmp = data.values.workload.metadata.name
-    #@   return tmp.replace("-","_")
+    #@   return kebabToCamelCase(data.values.workload.metadata.name)
     #@ end
 
     #! this function templates out the helm release manifest using supplied data values
