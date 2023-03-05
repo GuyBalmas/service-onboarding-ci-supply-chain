@@ -34,8 +34,8 @@ spec:
     - name: registry
       value:
         ca_cert_data: "" # LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURIekNDQWdlZ0F3SUJBZ0lSQU83NUxRcE1YVVVLVmZzbjdNdldOQnd3RFFZSktvWklodmNOQVFFTEJRQXcKS1RFbk1DVUdBMVVFQXhNZWRHRndMV2x1WjNKbGMzTXRjMlZzWm5OcFoyNWxaQzF5YjI5MExXTmhNQjRYRFRJegpNREV4TmpBNU1qQXhNRm9YRFRJek1EUXhOakE1TWpBeE1Gb3dLVEVuTUNVR0ExVUVBeE1lZEdGd0xXbHVaM0psCmMzTXRjMlZzWm5OcFoyNWxaQzF5YjI5MExXTmhNSUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DQVE4QU1JSUIKQ2dLQ0FRRUF0WGFuR1ZUZTBLTHM4NUdYSlI4VHl0aTZVTE1MYkw4K21DT0pPRmF3OWFnSklvS2tCK0E5OUtLQwpWMVd2L1BiMnJ1b1VtYVNLZGdPZ0hCZThoYW44Zytwdml6TWdXN3RKZ3lQWnpJRlJvTVNlbkRHYS9neWxBNjJsCjdvNzEzcVpsL0o2cGRiUGFlaTJIZTJRdnJuRDZueGxIVWVNQURMZVVWMGtuanFzUUFqaFh4bXhQTUl6VGdCN2MKSVBGQytIckdBbVZRUU0vY0FHK1JjazBDTnNOUVkwaklIMVJlQ1dzcGo4a2ViSWk1a0VMMTJGa1RxL3ArM2V5eApDT3dhMklCcWRxVGZjdXhqalFyb1o0WmVpU1VONmpWYSt6angwcEhocGRxZkpaa05XY1VWNFVKdjBiV0haMlJFCkVOMlUrT0FYMWxpcWVXNEMvSXZUMGVXcEZkQjArUUlEQVFBQm8wSXdRREFPQmdOVkhROEJBZjhFQkFNQ0FxUXcKRHdZRFZSMFRBUUgvQkFVd0F3RUIvekFkQmdOVkhRNEVGZ1FVWEdzU2d3Rk5vZThZQkVBZXErVlpzV2xXWXR3dwpEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBS1RsRnhDTklERkg5Q0YyWFJENVBwTFRaRUJvVlNYc3dhUDQvZnpZClBFTHJKUWJEQWpTamplcjZwaFJNaHNFaGQ0aktNS1pWZW4wNlorSCt0dHVob05EMlBRNlNlVmRPSEE4M0ZJRmsKdFBrZUttOG5mYW84Z21QUVVQbmlBa1hyOXZzMTEzdnhnRlA0SjdjeVV5Y0ZnYzN5SDl0QXVJek05cGdtZEhNMwpiTjRhRk5MYjRzWUwyOHIyd2I0cEZNeGxsZEZ1T05BTDZBbStXY2RUNjNBSy80M3NydHBxL3owR2N2MlNreHI4ClM2cVVxeU5NUzhTVE9hRlFmWHJrcDAwcUR1M1ZIMTNKWXdodTdrdW81RnNZSGZ0YzJUOS80a0R0KzV0YUZlY3UKMUxHQmpOQjRVM0NjbTl5VlhnL0VoY2g5bmRRTUgvemFzaEJpTHdyTXZyOE41T1E9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
-        repository: guybalmas # /tap-supply-chain
-        server: docker.io # 384617649113.dkr.ecr.eu-north-1.amazonaws.com # index.docker.io # 
+        repository: guy-lab-workloads # /tap-supply-chain
+        server: harbor.vrabbi.cloud # 384617649113.dkr.ecr.eu-north-1.amazonaws.com # index.docker.io # 
     - name: dockerfile
       default: ./Dockerfile
     - name: docker_build_context
@@ -124,9 +124,6 @@ spec:
     images:
       - name: image
         resource: image-provider
-    sources:
-    - name: source
-      resource: source-provider
 
   - name: argo-config-writer
     templateRef:
